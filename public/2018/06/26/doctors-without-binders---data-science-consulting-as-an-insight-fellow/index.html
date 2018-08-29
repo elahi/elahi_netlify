@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.47.1" />
+
+
+<title>Doctors without binders - data science consulting as an Insight Fellow - Marine Ecology &amp; Data Science</title>
+<meta property="og:title" content="Doctors without binders - data science consulting as an Insight Fellow - Marine Ecology &amp; Data Science">
+
+
+
+  
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/Erithacus_rubecula_crop.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="/publications/">Publications</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">5 min read</span>
+    
+
+    <h1 class="article-title">Doctors without binders - data science consulting as an Insight Fellow</h1>
+
+    
+    <span class="article-date">2018/06/26</span>
+    
+
+    <div class="article-content">
+      
+
+<p><img src="/post/2018-06-26-phraze_consulting_files/tired_doctor_binders.png" alt="Tired doc." width="700px"/></p>
+
+<p>Physicians are overburdened by their binders full of paperwork. Consequently, doctors are often <a href="https://www.wsj.com/articles/is-your-doctor-getting-too-much-screen-time-1450118616">staring at their computer screen</a> instead of interacting with their patient. In fact, the burden is so great that a new profession - <a href="https://www.scribeamerica.com/">medical scribe</a> - has emerged. Medical scribes accompany physicians and manually transcribe their conversations and enter annotated notes into the electronic medical record. <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4598196/">Bank and Gage (2015)</a> demonstrated that cardiovascular physicians with scribes:</p>
+
+<ul>
+<li>saw 10% more patients per hour than physicians without scribes</li>
+<li>increased revenue by $1.3 million</li>
+<li>for a hefty annual salary of $99k</li>
+</ul>
+
+<p>As a fellow with <a href="https://www.insightdatascience.com/">Insight Data Science</a>, I did a three-week consulting project with the start-up <a href="https://www.phraze.co/">Phraze</a>. Phraze is seeking to remove the burden of manual annotation with machine learning. That is, they are seeking to build a speech to medical record pipeline. The relevant bit here is that the transcribed speech needs to be tagged with the appropriate clinical codes (e.g., physical exam).</p>
+
+<p>My primary deliverable was to develop a supervised learning model to classify utterances between health care providers and consumers. An utterance, technically <em>speaking</em>, is a spoken word, statement, or vocal sound. Importantly, for our purposes, it is also a <em>unit of linguistic analysis</em>. Or a <em>phraze</em>, if you will. In this blog I describe how I classified utterances using natural language processing in <code>Python</code>.</p>
+
+<h3 id="the-dataset">The dataset</h3>
+
+<p>The dataset I obtained from Phraze were originally from an academic research group, and consisted of nearly 200 patient visits. Each visit was recorded and the audio was transcribed to text. The text was then entered into a spreadsheet with nearly 90k rows. Each row corresponded to a single utterance, and the columns described various features of each utterance (e.g., the role of the speaker; patient, doctor, nurse, mother, etc.). These features were annotated manually in 2013-2014, and importantly, these are the <em>true</em> labels I used for supervised learning.</p>
+
+<h3 id="data-cleaning-and-feature-engineering">Data cleaning and feature engineering</h3>
+
+<p>In <code>R</code>, I used the <code>tidyverse</code> to:</p>
+
+<ul>
+<li>Remove rows without any utterances (&lsquo;Text&rsquo;)</li>
+<li>Remove the first two rows and last three rows of each visit, because these did not contain meaningful utterances. Instead, these were typically bracketed text with procedural information (e.g., name of the transcriber).</li>
+<li>I removed patient visits with fewer than 50 utterances (rows); this resulted in 183 unique patient visits. The mean and median number of utterances per visit was 426 and 470, respectively.</li>
+</ul>
+
+<p>Next, I had to extract useful information from the raw features. In short, I used a combination of different features that are standard in the medical coding of clinical encounters. I won&rsquo;t go into the details here, but the final categories reflect typical entries on an electronic medical record:</p>
+
+<p><img src="/post/2018-06-26-phraze_consulting_files/phraze_classes.png" alt="phraze classes" width="700px"/></p>
+
+<p>I also collapsed the speaker roles into three categories:</p>
+
+<blockquote>
+<p>Patient<br />
+Provider  (includes doctors and nurses)<br />
+Other (includes other family members)</p>
+</blockquote>
+
+<p>Below is an example of a series of utterances between a doctor (bold) and patient (italics). In parentheses, I have labeled each utterances with the labeled class. Note that some utterances compose a single speaker turn:</p>
+
+<blockquote>
+<p><strong>I&rsquo;m going to take a listen to you</strong> (Physical exam)<br />
+<strong>all right?</strong> (Physical exam)<br />
+<strong>Big breaths</strong> (Physical exam)<br />
+<em>There&rsquo;s just a wheezing from my back</em> (Patient history)<br />
+<strong>Yeah, you are wheezing</strong> (Assessment)</p>
+</blockquote>
+
+<h3 id="natural-language-processing-and-classification">Natural language processing and classification</h3>
+
+<p>In brief, the analysis pipeline was:</p>
+
+<ol>
+<li>Balance the classes. There are many ways to do this, but I chose to keep it simple and sample rows randomly from each of the seven classes. The sample size of the least frequent class (physical exam) was used - therefore, for this class - all rows were used.</li>
+</ol>
+
+<p><img src="/post/2018-06-26-phraze_consulting_files/balance_classes.png" alt="balance classes" width="700px"/></p>
+
+<ol>
+<li>Use natural language processing tools (<code>nltk</code>) to:
+
+<ul>
+<li>strip special characters (which were often not words, but appeared to be data entry mistakes)</li>
+<li>tokenize words using regular expressions</li>
+<li>and a Snowball stemmer reduce words into shorter root forms</li>
+<li>create a feature matrix
+<br /></li>
+</ul></li>
+</ol>
+
+<p><img src="/post/2018-06-26-phraze_consulting_files/nlp_steps.png" alt="" width="700px"/></p>
+
+<ol>
+<li>Use logistic regression for classification (<code>sci-kit learn</code>). I also tried multinomical naive bayes and random forest classifiers - but these resulted in equivalent, or slightly worse, accuracy. Moreover, the resulting coefficients from logistic regression are easily interpretable, and I can identify the words that are associated with each category easily.</li>
+</ol>
+
+<p>I used grid search cross validation to tune the hyperparameters of the model - namely, which ngrams I should use (e.g., single token, or single token AND pairs of tokens), and whether to use bag of words or TFIDF. The grid search return ngram(1,2) and TFIDF. TFIDF stands for <em>term frequency inverse document frequency</em> - essentially, this approach deemphasizes frequently observed words across the classes. This was particularly important in my case, because I chose not to remove <a href="https://pythonspot.com/nltk-stop-words/">stop words</a> - words like <em>the, is, are</em>. I did not remove stop words (e.g., by using a pre-existing library of stop words) because many of my utterances were short (1-10 words) to begin with - so I did not want to strip them down to nothing (in some cases). Moreover, there is good reason to keep those stop words - for example, doctors may be more likely to use the word <em>you</em>, whereas patients might say the word <em>I</em> more often.</p>
+
+<p>When I applied the final (tuned) model to the remaining 20% of data in the testing set, overall accuracy was 45%. If the 7 categories were balanced, we would expect 14% accuracy. So, this represents a 3-factor improvement over random. A reasonable start.</p>
+
+<p>Accuracy for each class ranged from ~30-65%. The classifier was particularly good at identifying phrases associated with physical exam. Below I plot accuracy by class, with the associated words for three of the classes:</p>
+
+<p><img src="/post/2018-06-26-phraze_consulting_files/class_accuracy.png" alt="" width="700px"/></p>
+
+<h3 id="summary">Summary</h3>
+
+<p>In 3 weeks, I delivered proof of concept to Phraze - machine learning can be used to automatically classify the individual phrases of doctor-patient conversations. There are a number of possible steps to improve the classification - e.g., use an oversampling algorithm (e.g., SMOTE) to balance the classes without sacrificing data, modify the NLP steps, try different algorithms, and change the classes altogether with the new information in hand. It may also be useful to include the speaker&rsquo;s role in the classification. For example, doctors are more likely to speak about the physical exam, while &lsquo;other people&rsquo; (e.g., the patient&rsquo;s mother) are more likely so speak about &lsquo;other things&rsquo;:</p>
+
+<p><img src="/post/2018-06-26-phraze_consulting_files/class_role.png" alt="" width="700px"/></p>
+
+<p>Ultimately, the text classifier will streamline the process of data entry in the electronic medical record - which means your doctor will be happy, and you&rsquo;ll be happy too.</p>
+
+<p><img src="/post/2018-06-26-phraze_consulting_files/happy_doctor_patient.jpg" alt="" width="700px"/></p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-121894527-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+  </body>
+</html>
+

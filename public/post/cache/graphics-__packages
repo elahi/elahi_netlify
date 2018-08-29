@@ -1,0 +1,11 @@
+base
+knitr
+dplyr
+ggplot2
+tidyr
+readr
+ncdf4
+fuzzyjoin
+bindrcpp
+maps
+mapdata

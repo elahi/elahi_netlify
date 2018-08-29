@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Msec on Marine Ecology &amp; Data Science</title>
+    <link>/tags/msec/</link>
+    <description>Recent content in Msec on Marine Ecology &amp; Data Science</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 23 Aug 2018 21:13:14 -0500</lastBuildDate>
+    
+	<atom:link href="/tags/msec/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Extracting MSEC data from a netcdf file</title>
+      <link>/2018/08/23/extracting-msec-data-from-a-netcdf-file/</link>
+      <pubDate>Thu, 23 Aug 2018 21:13:14 -0500</pubDate>
+      
+      <guid>/2018/08/23/extracting-msec-data-from-a-netcdf-file/</guid>
+      <description>Introduction I am working on a project that is trying to understand why some coral reefs are faring better than others. Towards this end, I am collating a number of predictors hypothesized to influence the condition of coral reefs. In this post, I am going to demonstrate the steps necessary to take advantage of this awesome dataset by Yeager et al. 2017.
+There are two ways to go about extracting the geospatial data:</description>
+    </item>
+    
+  </channel>
+</rss>

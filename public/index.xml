@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Marine Ecology &amp; Data Science</title>
+    <link>/</link>
+    <description>Recent content on Marine Ecology &amp; Data Science</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 28 Aug 2018 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Publications</title>
+      <link>/publications/</link>
+      <pubDate>Tue, 28 Aug 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/publications/</guid>
+      <description>[15] Elahi, R., Ferretti, F., Bastari, A., Cerrano, C., Colloca, F., Kowalik, J., Ruckelshaus, M., Struck, A. and F. Micheli. 2018. Leveraging vessel traffic data and a temporary fishing closure to inform marine management. Frontiers in Ecology and Environment https://doi.org/10.1002/fee.1936
+[14] Guest, J.R., Edmunds, P.J., Gates, R.D., Kuffner, I.B., Andersonn, A.J., Barnes, B.B., Chollett, I., Courtney, T.A., Elahi, R., Gross, K., Lenz, E.A., Mitarai, S., Mumby, P.J., Nelson, H.R., Parker, B.</description>
+    </item>
+    
+    <item>
+      <title>About</title>
+      <link>/about/</link>
+      <pubDate>Thu, 23 Aug 2018 21:48:51 -0700</pubDate>
+      
+      <guid>/about/</guid>
+      <description>Robin Elahi, PhD I am a lecturer at Stanford University&amp;rsquo;s Hopkins Marine Station, where I teach courses in kelp forest ecology, statistics, and scientific computing.
+In general, I study drivers of spatial and temporal change in marine ecosystems. Ongoing and recent projects include:
+ examining the consequences of fisheries closures on fisher behavior
+ understanding why some coral reefs fare better than their neighbors
+ biodiversity and body size change, particularly in the context of recent human impacts</description>
+    </item>
+    
+    <item>
+      <title>Doctors without binders - data science consulting as an Insight Fellow</title>
+      <link>/2018/06/26/doctors-without-binders---data-science-consulting-as-an-insight-fellow/</link>
+      <pubDate>Tue, 26 Jun 2018 21:49:57 -0700</pubDate>
+      
+      <guid>/2018/06/26/doctors-without-binders---data-science-consulting-as-an-insight-fellow/</guid>
+      <description>Physicians are overburdened by their binders full of paperwork. Consequently, doctors are often staring at their computer screen instead of interacting with their patient. In fact, the burden is so great that a new profession - medical scribe - has emerged. Medical scribes accompany physicians and manually transcribe their conversations and enter annotated notes into the electronic medical record. Bank and Gage (2015) demonstrated that cardiovascular physicians with scribes:</description>
+    </item>
+    
+  </channel>
+</rss>

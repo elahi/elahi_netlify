@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on Marine Ecology &amp; Data Science</title>
+    <link>/post/</link>
+    <description>Recent content in Posts on Marine Ecology &amp; Data Science</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 26 Jun 2018 21:49:57 -0700</lastBuildDate>
+    
+	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Doctors without binders - data science consulting as an Insight Fellow</title>
+      <link>/2018/06/26/doctors-without-binders---data-science-consulting-as-an-insight-fellow/</link>
+      <pubDate>Tue, 26 Jun 2018 21:49:57 -0700</pubDate>
+      
+      <guid>/2018/06/26/doctors-without-binders---data-science-consulting-as-an-insight-fellow/</guid>
+      <description>Physicians are overburdened by their binders full of paperwork. Consequently, doctors are often staring at their computer screen instead of interacting with their patient. In fact, the burden is so great that a new profession - medical scribe - has emerged. Medical scribes accompany physicians and manually transcribe their conversations and enter annotated notes into the electronic medical record. Bank and Gage (2015) demonstrated that cardiovascular physicians with scribes:</description>
+    </item>
+    
+  </channel>
+</rss>
