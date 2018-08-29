@@ -7,9 +7,6 @@ tags:
 excerpt:
 ---
 
-![](/post/2018-06-26-phraze_consulting_files/tired_doctor_binders.png)
-
-
 <img src="/post/2018-06-26-phraze_consulting_files/tired_doctor_binders.png" alt="Tired doc." width="700px"/>
 
 Physicians are overburdened by their binders full of paperwork. Consequently, doctors are often [staring at their computer screen](https://www.wsj.com/articles/is-your-doctor-getting-too-much-screen-time-1450118616) instead of interacting with their patient. In fact, the burden is so great that a new profession - [medical scribe](https://www.scribeamerica.com/) - has emerged. Medical scribes accompany physicians and manually transcribe their conversations and enter annotated notes into the electronic medical record. [Bank and Gage (2015)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4598196/) demonstrated that cardiovascular physicians with scribes:
