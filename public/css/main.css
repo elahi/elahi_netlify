@@ -25,6 +25,18 @@ a {
   outline: none;
 }
 
+img,
+video {
+  height: auto;
+  max-width: 100%;
+  //display: block; // I commented this out b/c it f'd the footer
+}
+
+.img-responsive {
+  /* Extend Bootstrap declaration with centering. */
+  margin: 0 auto;
+}
+
 code {
   background-color: rgba(0, 0, 0, 0.02);
 }
@@ -319,3 +331,4 @@ code {
     box-shadow: none;
   }
 }
+
