@@ -289,6 +289,5 @@ msec_noaa %>%
 
 ```
 
-The dashed line is 1:1, and the blue line right on top of it is a regression fit - so that is good. But it is less than satisfying that the points aren't *exactly* the same. But I have no idea how the shiny app works to retrieve the data, so perhaps that isn't too surprising. I would appreciate feedback - if you have any thoughts, hit me up on twitter or email, please. 
+The dashed line is 1:1, and the blue line right on top of it is a regression fit - so that is good. But it is less than satisfying that the points aren't *exactly* the same. But I have no idea how the shiny app works to retrieve the data, so perhaps that isn't too surprising. I would appreciate feedback - if you have any thoughts, hit me up on twitter or email, please!
 
-Well, this result is 
