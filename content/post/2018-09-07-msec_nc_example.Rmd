@@ -20,9 +20,9 @@ library(knitr)
 
 ### Introduction
 
-I am working on a project that is trying to understand why some coral reefs are faring better than others. Towards this end, I am collating a number of predictors hypothesized to influence the condition of coral reefs. In this post, I am going to demonstrate the steps necessary to take advantage of this awesome dataset by [Yeager et al. 2017](https://esajournals.onlinelibrary.wiley.com/doi/abs/10.1002/ecy.1884). 
+I am working on a project that is trying to understand why some coral reefs are faring better than others. Towards this end, I am collating a number of predictors hypothesized to influence the condition of coral reefs. In this post, I am going to demonstrate the steps necessary to take advantage of the awesome geospatial dataset by [Yeager et al. 2017](https://esajournals.onlinelibrary.wiley.com/doi/abs/10.1002/ecy.1884). 
 
-There are two ways to go about extracting the geospatial data:
+There are two ways to go about extracting the data:
 
   1. You can download the supplementary material as a zipped file from the data paper (see above link)
   2. You can query this nice [shiny app](https://shiny.sesync.org/apps/msec/) with your set of lat-longs 
@@ -289,5 +289,7 @@ msec_noaa %>%
 
 ```
 
-The dashed line is 1:1, and the blue line right on top of it is a regression fit - so that is good. But it is less than satisfying that the points aren't *exactly* the same. But I have no idea how the shiny app works to retrieve the data, so perhaps that isn't too surprising. I would appreciate feedback - if you have any thoughts, hit me up on twitter or email, please!
+The dashed line is 1:1, and the blue line right on top of it is a regression fit - so that is good. But it is less than satisfying that the points aren't *exactly* the same. But I have no idea how the shiny app works to retrieve the data, so perhaps that isn't too surprising. 
+
+If you have any tips on how to improve this approach, I am all ears. Also, feedback is welcome - if you have any thoughts, you can leave a comment or hit me up on twitter or email (see 'About' page). 
 

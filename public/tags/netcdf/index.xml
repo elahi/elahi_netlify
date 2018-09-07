@@ -17,8 +17,8 @@
       <pubDate>Fri, 07 Sep 2018 12:13:14 -0500</pubDate>
       
       <guid>/2018/09/07/extracting-msec-data-from-a-netcdf-file/</guid>
-      <description>Introduction I am working on a project that is trying to understand why some coral reefs are faring better than others. Towards this end, I am collating a number of predictors hypothesized to influence the condition of coral reefs. In this post, I am going to demonstrate the steps necessary to take advantage of this awesome dataset by Yeager et al. 2017.
-There are two ways to go about extracting the geospatial data:</description>
+      <description>Introduction I am working on a project that is trying to understand why some coral reefs are faring better than others. Towards this end, I am collating a number of predictors hypothesized to influence the condition of coral reefs. In this post, I am going to demonstrate the steps necessary to take advantage of the awesome geospatial dataset by Yeager et al. 2017.
+There are two ways to go about extracting the data:</description>
     </item>
     
   </channel>
