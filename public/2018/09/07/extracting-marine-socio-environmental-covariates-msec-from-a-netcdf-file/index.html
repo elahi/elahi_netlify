@@ -1,14 +1,73 @@
----
-title: "Extracting marine socio-environmental covariates (MSEC) from a netcdf file"
-author: "Robin Elahi"
-date: 2018-09-07T12:13:14-05:00
-categories: ["R"]
-tags: ["R Markdown", "netcdf", "msec"]
----
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.47.1" />
+
+
+<title>Extracting marine socio-environmental covariates (MSEC) from a netcdf file - Marine Ecology &amp; Data Science</title>
+<meta property="og:title" content="Extracting marine socio-environmental covariates (MSEC) from a netcdf file - Marine Ecology &amp; Data Science">
 
 
 
-<div id="introduction" class="section level3">
+  
+
+
+
+
+
+
+
+
+<link href='//cdn.bootcss.com/highlight.js/9.11.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/Erithacus_rubecula_crop.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="/publications/">Publications</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">7 min read</span>
+    
+
+    <h1 class="article-title">Extracting marine socio-environmental covariates (MSEC) from a netcdf file</h1>
+
+    
+    <span class="article-date">2018/09/07</span>
+    
+
+    <div class="article-content">
+      <div id="introduction" class="section level3">
 <h3>Introduction</h3>
 <p>I am working on a project that is trying to understand why some coral reefs are faring better than others. Towards this end, I am collating a number of predictors hypothesized to influence the condition of coral reefs. In this post, I am going to demonstrate the steps necessary to take advantage of the awesome MSEC (marine socio-environmental covariates) dataset by <a href="https://esajournals.onlinelibrary.wiley.com/doi/abs/10.1002/ecy.1884">Yeager et al. 2017</a>.</p>
 <p>There are two ways to go about extracting the geospatial data:</p>
@@ -276,3 +335,68 @@ msec_noaa %&gt;%
 <p>The dashed line is 1:1, and the blue line right on top of it is a regression fit - so that is good. But it is less than satisfying that the points aren’t <em>exactly</em> the same. But I have no idea how the shiny app works to retrieve the data, so perhaps that isn’t too surprising.</p>
 <p>If you have any tips on how to improve this approach, I am all ears. Also, feedback is welcome - if you have any thoughts, you can leave a comment or hit me up on twitter or email (see ‘About’ page).</p>
 </div>
+
+    </div>
+  </article>
+
+  <div id="disqus_thread"></div>
+<script>
+(function() {
+var d = document, s = d.createElement('script');
+s.src = 'https://elahi-meds.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/highlight.min.js"></script>
+
+
+
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/r.min.js"></script>
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-125451055-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+  </body>
+</html>
+
