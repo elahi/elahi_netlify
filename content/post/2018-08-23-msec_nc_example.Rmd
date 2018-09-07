@@ -116,7 +116,7 @@ For this example, I am using Puerto Rican station locations sampled by NOAA in 2
 
 ```{r load_noaa_ll_data}
 # Load list of lat-longs
-noaa_ll <- read_csv("data/NCRMP_PR2014_StationLocations.csv") %>% 
+noaa_ll <- read_csv("static/my_data/NCRMP_PR2014_StationLocations.csv") %>% 
   rename(SI_LATI = latitude, SI_LONG = longitude) %>% 
   mutate(ll_id = seq(1:length(SI_LATI))) %>% 
   select(SI_LATI:ll_id)
@@ -267,14 +267,14 @@ basemap +
 
 6. Sanity check
 
-First, I need to download the distance to market data from the shiny app. You'll have to rename the columns in the csv file to 'long' and 'lat'. 
+First, I need to download the distance to market data from the shiny app. You'll have to rename the columns in the csv file to 'long' and 'lat'. In my `github/elahi_netlify` folder, I copied the original NCRMP file, and renamed the columns to work with the shiny app. 
 
 ```{r load_msec_data}
 
 theme_set(theme_bw(base_size = 16) + 
             theme(strip.background = element_blank()))
 
-msec <- read_csv("data/msec_out.csv") %>% 
+msec <- read_csv("static/my_data/msec_out.csv") %>% 
   mutate(ll_id = seq(1:length(long)))
 msec
 
@@ -283,9 +283,12 @@ msec_noaa <- inner_join(msec, noaa_ll_i3, by = "ll_id")
 msec_noaa %>% 
   ggplot(aes(z, dist_market)) + 
   geom_abline(slope = 1, intercept = 0, linetype = "dashed") + 
+  geom_smooth(method = "lm") + 
   geom_point(color = "red", alpha = 0.75) + 
   labs(x = "netcdf", y = "shiny", title = "Distance to market (km)")
 
 ```
 
+The dashed line is 1:1, and the blue line right on top of it is a regression fit - so that is good. But it is less than satisfying that the points aren't *exactly* the same. But I have no idea how the shiny app works to retrieve the data, so perhaps that isn't too surprising. I would appreciate feedback - if you have any thoughts, hit me up on twitter or email, please. 
 
+Well, this result is 

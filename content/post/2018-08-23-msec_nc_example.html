@@ -91,7 +91,7 @@ convert_360_to_180 &lt;- function(x){
 </ol>
 <p>For this example, I am using Puerto Rican station locations sampled by NOAA in 2014. <a href="https://data.nodc.noaa.gov/cgi-bin/iso?id=gov.noaa.nodc:0151729" class="uri">https://data.nodc.noaa.gov/cgi-bin/iso?id=gov.noaa.nodc:0151729</a></p>
 <pre class="r"><code># Load list of lat-longs
-noaa_ll &lt;- read_csv(&quot;data/NCRMP_PR2014_StationLocations.csv&quot;) %&gt;% 
+noaa_ll &lt;- read_csv(&quot;static/my_data/NCRMP_PR2014_StationLocations.csv&quot;) %&gt;% 
   rename(SI_LATI = latitude, SI_LONG = longitude) %&gt;% 
   mutate(ll_id = seq(1:length(SI_LATI))) %&gt;% 
   select(SI_LATI:ll_id)
@@ -243,11 +243,11 @@ basemap +
 <ol start="6" style="list-style-type: decimal">
 <li>Sanity check</li>
 </ol>
-<p>First, I need to download the distance to market data from the shiny app. You’ll have to rename the columns in the csv file to ‘long’ and ‘lat’.</p>
+<p>First, I need to download the distance to market data from the shiny app. You’ll have to rename the columns in the csv file to ‘long’ and ‘lat’. In my <code>github/elahi_netlify</code> folder, I copied the original NCRMP file, and renamed the columns to work with the shiny app.</p>
 <pre class="r"><code>theme_set(theme_bw(base_size = 16) + 
             theme(strip.background = element_blank()))
 
-msec &lt;- read_csv(&quot;data/msec_out.csv&quot;) %&gt;% 
+msec &lt;- read_csv(&quot;static/my_data/msec_out.csv&quot;) %&gt;% 
   mutate(ll_id = seq(1:length(long)))
 msec</code></pre>
 <pre><code>## # A tibble: 230 x 4
@@ -269,7 +269,10 @@ msec</code></pre>
 msec_noaa %&gt;% 
   ggplot(aes(z, dist_market)) + 
   geom_abline(slope = 1, intercept = 0, linetype = &quot;dashed&quot;) + 
+  geom_smooth(method = &quot;lm&quot;) + 
   geom_point(color = &quot;red&quot;, alpha = 0.75) + 
   labs(x = &quot;netcdf&quot;, y = &quot;shiny&quot;, title = &quot;Distance to market (km)&quot;)</code></pre>
 <p><img src="/post/2018-08-23-msec_nc_example_files/figure-html/load_msec_data-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>The dashed line is 1:1, and the blue line right on top of it is a regression fit - so that is good. But it is less than satisfying that the points aren’t <em>exactly</em> the same. But I have no idea how the shiny app works to retrieve the data, so perhaps that isn’t too surprising. I would appreciate feedback - if you have any thoughts, hit me up on twitter or email, please.</p>
+<p>Well, this result is</p>
 </div>
