@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.47.1" />
+
+
+<title>Extracting MSEC data from a netcdf file - Marine Ecology &amp; Data Science</title>
+<meta property="og:title" content="Extracting MSEC data from a netcdf file - Marine Ecology &amp; Data Science">
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdn.bootcss.com/highlight.js/9.11.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/Erithacus_rubecula_crop.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="/publications/">Publications</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">7 min read</span>
+    
+
+    <h1 class="article-title">Extracting MSEC data from a netcdf file</h1>
+
+    
+    <span class="article-date">2018/09/07</span>
+    
+
+    <div class="article-content">
+      <div id="introduction" class="section level3">
+<h3>Introduction</h3>
+<p>I am working on a project that is trying to understand why some coral reefs are faring better than others. Towards this end, I am collating a number of predictors hypothesized to influence the condition of coral reefs. In this post, I am going to demonstrate the steps necessary to take advantage of this awesome dataset by <a href="https://esajournals.onlinelibrary.wiley.com/doi/abs/10.1002/ecy.1884">Yeager et al. 2017</a>.</p>
+<p>There are two ways to go about extracting the geospatial data:</p>
+<ol style="list-style-type: decimal">
+<li>You can download the supplementary material as a zipped file from the data paper (see above link)</li>
+<li>You can query this nice <a href="https://shiny.sesync.org/apps/msec/">shiny app</a> with your set of lat-longs</li>
+</ol>
+<p>The 2nd option was super easy, and I was able to immediately plug in my set of ~4000 lat-longs and extract one of the datasets I needed. But here’s the rub - I was only able to do this for three of the predictors: net primary productivity, wave energy, and distance to market. Due to the constraints on the app, I wasn’t able to pull the reef area and human population data.</p>
+<p>So, I had to figure out how to wrangle the netcdf files - here I’ll share what I came up with.</p>
+<pre class="r"><code># Tidyverse
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(readr)
+
+# Spatial
+library(ncdf4)
+library(fuzzyjoin)</code></pre>
+<p>Here’s a function to get a basemap:</p>
+<pre class="r"><code>## Function to get a base map
+get_base_map_general &lt;- function(x, latitude = &quot;SI_LATI&quot;, longitude = &quot;SI_LONG&quot;, 
+                                 range_extension = 0.25, my_color = &quot;black&quot;, 
+                                 my_fill = &quot;gray&quot;, high_res = TRUE){
+  
+  library(mapdata)
+  library(dplyr)
+  library(ggplot2)
+  
+  SI_LONG = x[, longitude]
+  SI_LATI = x[, latitude]
+  
+  # Get latitude and longitude range limits
+  rangeLat &lt;- range(SI_LATI) + c(-range_extension, range_extension)
+  rangeLong &lt;- range(SI_LONG) + c(-range_extension, range_extension)
+  
+  ## Use fortify
+  if(high_res == TRUE){
+    coast_map &lt;- fortify(map(&quot;worldHires&quot;, fill = TRUE, 
+                             xlim = rangeLong, ylim = rangeLat, 
+                             plot = FALSE)) 
+  }
+
+  if(high_res == FALSE){
+    coast_map &lt;- fortify(map(&quot;world&quot;, fill = TRUE, 
+                             xlim = rangeLong, ylim = rangeLat, 
+                             plot = FALSE)) 
+  }
+  
+  map1 &lt;- ggplot(coast_map, aes(long, lat)) + 
+    geom_map(map = coast_map, aes(map_id = region), 
+             color = my_color, fill = my_fill, size = 0.25) + 
+    coord_fixed() + 
+    labs(x = &quot;Longitude&quot;, y = &quot;Latitude&quot;) + 
+    scale_x_continuous(limits = rangeLong) + 
+    scale_y_continuous(limits = rangeLat) + 
+    theme(panel.grid = element_blank())
+  
+  # Return base map
+  map1 
+}</code></pre>
+<p>It will be necessary to convert between two different longitude formats:</p>
+<pre class="r"><code>## Functions to convert longitude between -180 &amp; 180 and 0 &amp; 360
+
+convert_180_to_360 &lt;- function(x){
+  # Add 360 to negative values
+  x[x &lt; 0] &lt;- x[x &lt; 0] + 360
+  return(x)
+}
+
+convert_360_to_180 &lt;- function(x){
+  # Subtract 360 to values &gt;= 180
+  x[x &gt;= 180] &lt;- x[x &gt;= 180] - 360
+  return(x)
+}</code></pre>
+</div>
+<div id="get-noaa-lat-longs" class="section level3">
+<h3>Get NOAA lat longs</h3>
+<ol style="list-style-type: decimal">
+<li>Get range of lat &amp; longs in df</li>
+</ol>
+<p>For this example, I am using Puerto Rican station locations sampled by NOAA in 2014. <a href="https://data.nodc.noaa.gov/cgi-bin/iso?id=gov.noaa.nodc:0151729" class="uri">https://data.nodc.noaa.gov/cgi-bin/iso?id=gov.noaa.nodc:0151729</a></p>
+<pre class="r"><code># Load list of lat-longs
+noaa_ll &lt;- read_csv(&quot;static/my_data/NCRMP_PR2014_StationLocations.csv&quot;) %&gt;% 
+  rename(SI_LATI = latitude, SI_LONG = longitude) %&gt;% 
+  mutate(ll_id = seq(1:length(SI_LATI))) %&gt;% 
+  select(SI_LATI:ll_id)
+
+noaa_ll</code></pre>
+<pre><code>## # A tibble: 230 x 3
+##     SI_LATI   SI_LONG ll_id
+##       &lt;dbl&gt;     &lt;dbl&gt; &lt;int&gt;
+##  1 17.87082 -66.49521     1
+##  2 17.86940 -66.25568     2
+##  3 17.87745 -66.48427     3
+##  4 17.87594 -66.27114     4
+##  5 17.87948 -66.26637     5
+##  6 17.87794 -66.15841     6
+##  7 17.87743 -66.12400     7
+##  8 17.87838 -66.15746     8
+##  9 17.87950 -66.11124     9
+## 10 17.88581 -66.50208    10
+## # ... with 220 more rows</code></pre>
+<pre class="r"><code># Convert noaa longitude to nc longitude
+noaa_ll &lt;- noaa_ll %&gt;% 
+  mutate(SI_LONG_360 = convert_180_to_360(SI_LONG))
+
+# Choose subset i (a relic from my original script, sorry)
+noaa_ll_i &lt;- noaa_ll %&gt;% 
+  filter(SI_LONG &gt; -67.5)
+
+# Get lat and long range (I will use this to subset the netcdf data next)
+lat_range &lt;- range(noaa_ll_i$SI_LATI)
+long_range &lt;- range(noaa_ll_i$SI_LONG_360)</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>Extract the relevant netcdf data</li>
+</ol>
+<p>Download the Yeager <a href="https://esajournals.onlinelibrary.wiley.com/doi/abs/10.1002/ecy.1884">DataS1 zip archive</a>.</p>
+<p>I will use distance to market for this example - so that I can double check my work against the shiny app.</p>
+<pre class="r"><code># Enter your path to the data
+path_to_data &lt;- &quot;/Volumes/sdxc1/&quot;
+
+# Retrieve a list of nc files in my data folder:
+flist &lt;- list.files(path = path_to_data, pattern = &quot;^.*\\.(nc|NC|Nc|Nc)$&quot;)
+flist</code></pre>
+<pre><code>## [1] &quot;msec_distmarket.nc&quot;</code></pre>
+<pre class="r"><code># The following code is from:
+# https://stackoverflow.com/questions/21280104/how-to-take-a-subset-from-a-netcdf-file-using-latitude-longitude-boundaries-in-r
+
+ncFile &lt;- nc_open(paste0(path_to_data, flist[1]))
+
+# Retrieve the latitude and longitude values.
+attributes(ncFile$dim)$names</code></pre>
+<pre><code>## [1] &quot;longitude&quot; &quot;latitude&quot;</code></pre>
+<pre class="r"><code>nc_lon &lt;- ncvar_get(ncFile, attributes(ncFile$dim)$names[1])
+nc_lat &lt;- ncvar_get(ncFile, attributes(ncFile$dim)$names[2])
+
+nc_lon_length &lt;- length(nc_lon)
+nc_lat_length &lt;- length(nc_lat)
+
+nc_lon_bin_size &lt;- 360 / nc_lon_length
+nc_lat_bin_size &lt;- 180 / nc_lat_length
+
+# Now extract the relevant lat-longs
+# Add a buffer p x the bin size
+# p = multiplier
+p = 2
+LonIdx &lt;- which(ncFile$dim$lon$vals &gt; long_range[1] - p*nc_lon_bin_size &amp; ncFile$dim$lon$vals &lt; long_range[2] + p*nc_lon_bin_size)
+
+LatIdx &lt;- which(ncFile$dim$lat$vals &gt; lat_range[1] - p*nc_lat_bin_size &amp; ncFile$dim$lat$vals &lt; lat_range[2] + p*nc_lat_bin_size)
+
+MyVariable &lt;- ncvar_get(ncFile, attributes(ncFile$var)$names[1])[LonIdx, LatIdx]
+
+lon &lt;- ncFile$dim$lon$val[LonIdx] 
+lat &lt;- ncFile$dim$lat$val[LatIdx]
+nc_close(ncFile)
+
+nc_df &lt;- cbind(rep(lat, each = length(lon)), rep(lon, length(lat)), 
+                c(MyVariable)) %&gt;% tbl_df() %&gt;% 
+  rename(SI_LATI = V1, SI_LONG_360 = V2, z = V3) 
+
+# Change to -180 to 180
+nc_df$SI_LONG &lt;- convert_360_to_180(nc_df$SI_LONG_360)</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li>Map the results</li>
+</ol>
+<pre class="r"><code>theme_set(theme_bw(base_size = 16) + 
+            theme(strip.background = element_blank()))
+
+# Note that z = NA results in gray cell
+summary(nc_df$z)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA&#39;s 
+##   3.554  30.250  42.970  42.208  54.129  84.740     371</code></pre>
+<pre class="r"><code>nc_df %&gt;% 
+  ggplot(aes(SI_LONG, SI_LATI, fill = z)) + 
+  geom_raster() + 
+  scale_fill_gradient() + 
+  coord_equal()
+
+# Remove NAs (for safety, in case the join occurs on a cell without satellite data)
+nc_df_sub &lt;- nc_df %&gt;% filter(!is.na(z))
+summary(nc_df_sub$z)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   3.554  30.250  42.970  42.208  54.129  84.740</code></pre>
+<pre class="r"><code>nc_df_sub %&gt;% 
+  ggplot(aes(SI_LONG, SI_LATI, fill = z)) + 
+  geom_raster() + 
+  scale_fill_gradient() + 
+  coord_equal()</code></pre>
+<p><img src="/post/2018-09-07-msec_nc_example_files/figure-html/map_nc_df-1.png" width="1152" style="display: block; margin: auto;" /><img src="/post/2018-09-07-msec_nc_example_files/figure-html/map_nc_df-2.png" width="1152" style="display: block; margin: auto;" /></p>
+<ol start="4" style="list-style-type: decimal">
+<li>Left fuzzy geo-join</li>
+</ol>
+<pre class="r"><code>noaa_ll_i2 &lt;- noaa_ll_i %&gt;% 
+  select(-SI_LONG_360) %&gt;% # have to remove this otherwise fuzzy join fails (b/c tries to join on three cols)
+  geo_left_join(., nc_df_sub, unit = &#39;km&#39;, 
+                distance_col = &quot;dist_km&quot;, max_dist = 4)
+
+# Note that there are now multiple rows (dist_km) for each ll_id
+# Group by ll_id, arrange by dist_km (descending), then slice the first row
+# Should retrieve the original nrows
+
+noaa_ll_i3 &lt;- noaa_ll_i2 %&gt;% 
+  group_by(ll_id) %&gt;% 
+  arrange(ll_id, dist_km) %&gt;% 
+  slice(1) %&gt;% 
+  ungroup()</code></pre>
+<ol start="5" style="list-style-type: decimal">
+<li>Map Puerto Rico</li>
+</ol>
+<p>The red x’s are the station locations, and the black points represent the center of each grid cell from the MSEC dataset. The black segment links each station location with the corresponding MSEC grid cell (i.e., the associated value).</p>
+<pre class="r"><code>theme_set(theme_bw(base_size = 16) + 
+            theme(strip.background = element_blank()))
+
+## Get basemap
+basemap &lt;- get_base_map_general(noaa_ll_i3, latitude = &quot;SI_LATI.y&quot;, 
+                                longitude = &quot;SI_LONG.y&quot;, 
+                                range_extension = 0.1, high_res = T)
+
+basemap + 
+  geom_raster(data = nc_df_sub, aes(SI_LONG, SI_LATI, fill = z), 
+              inherit.aes = FALSE, alpha = 0.75) +
+  geom_point(data = noaa_ll_i, aes(SI_LONG, SI_LATI), # Site ll&#39;s
+             size = 1, alpha = 1, inherit.aes = FALSE, color = &quot;red&quot;, pch = 4) + 
+  geom_point(data = noaa_ll_i3, aes(SI_LONG.y, SI_LATI.y), # NC ll&#39;s
+             size = 0.5, alpha = 1, inherit.aes = FALSE, color = &quot;darkblue&quot;, pch = 0) + 
+  scale_fill_gradient(low = &quot;lightblue&quot;, high = &quot;darkblue&quot;) + 
+  theme(legend.position = &quot;bottom&quot;) +
+  geom_segment(data = noaa_ll_i3, aes(x = SI_LONG.y, y = SI_LATI.y, 
+                  xend = SI_LONG.x, yend = SI_LATI.x), color = &quot;black&quot;, 
+               inherit.aes = FALSE) </code></pre>
+<p><img src="/post/2018-09-07-msec_nc_example_files/figure-html/map_pr-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<ol start="6" style="list-style-type: decimal">
+<li>Sanity check</li>
+</ol>
+<p>First, I need to download the distance to market data from the shiny app. You’ll have to rename the columns in the csv file to ‘long’ and ‘lat’. In my <code>github/elahi_netlify</code> folder, I copied the original NCRMP file, and renamed the columns to work with the shiny app.</p>
+<pre class="r"><code>theme_set(theme_bw(base_size = 16) + 
+            theme(strip.background = element_blank()))
+
+msec &lt;- read_csv(&quot;static/my_data/msec_out.csv&quot;) %&gt;% 
+  mutate(ll_id = seq(1:length(long)))
+msec</code></pre>
+<pre><code>## # A tibble: 230 x 4
+##         long      lat dist_market ll_id
+##        &lt;dbl&gt;    &lt;dbl&gt;       &lt;dbl&gt; &lt;int&gt;
+##  1 -66.49521 17.87082    20.84808     1
+##  2 -66.25568 17.86940    41.50285     2
+##  3 -66.48427 17.87745    21.00675     3
+##  4 -66.27114 17.87594    39.71165     4
+##  5 -66.26637 17.87948    40.01879     5
+##  6 -66.15841 17.87794    50.79391     6
+##  7 -66.12400 17.87743    54.28600     7
+##  8 -66.15746 17.87838    50.87443     8
+##  9 -66.11124 17.87950    55.51502     9
+## 10 -66.50208 17.88581    19.09071    10
+## # ... with 220 more rows</code></pre>
+<pre class="r"><code>msec_noaa &lt;- inner_join(msec, noaa_ll_i3, by = &quot;ll_id&quot;)
+
+msec_noaa %&gt;% 
+  ggplot(aes(z, dist_market)) + 
+  geom_abline(slope = 1, intercept = 0, linetype = &quot;dashed&quot;) + 
+  geom_smooth(method = &quot;lm&quot;) + 
+  geom_point(color = &quot;red&quot;, alpha = 0.75) + 
+  labs(x = &quot;netcdf&quot;, y = &quot;shiny&quot;, title = &quot;Distance to market (km)&quot;)</code></pre>
+<p><img src="/post/2018-09-07-msec_nc_example_files/figure-html/load_msec_data-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>The dashed line is 1:1, and the blue line right on top of it is a regression fit - so that is good. But it is less than satisfying that the points aren’t <em>exactly</em> the same. But I have no idea how the shiny app works to retrieve the data, so perhaps that isn’t too surprising. I would appreciate feedback - if you have any thoughts, hit me up on twitter or email, please!</p>
+</div>
+
+    </div>
+  </article>
+
+  
+<section id="comments">
+  <div id="disqus_thread"></div>
+  <script>
+  var disqus_config = function () {
+  
+  };
+  (function() {
+    var inIFrame = function() {
+      var iframe = true;
+      try { iframe = window.self !== window.top; } catch (e) {}
+      return iframe;
+    };
+    if (inIFrame()) return;
+    var d = document, s = d.createElement('script');
+    s.src = '//robinelahi.disqus.com/embed.js'; s.async = true;
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</section>
+
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/highlight.min.js"></script>
+
+
+
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/r.min.js"></script>
+<script src="//cdn.bootcss.com/highlight.js/9.11.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-125451055-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+  </body>
+</html>
+
