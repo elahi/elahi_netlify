@@ -1,7 +1,7 @@
 ---
 title: "Extracting MSEC data from a netcdf file"
 author: "Robin Elahi"
-date: 2018-09-07T21:13:14-05:00
+date: 2018-09-07T12:13:14-05:00
 categories: ["R"]
 tags: ["R Markdown", "netcdf", "msec"]
 ---
