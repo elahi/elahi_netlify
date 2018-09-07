@@ -2,7 +2,7 @@ baseurl = "/"
 languageCode = "en-us"
 title = "Marine Ecology & Data Science"
 theme = "hugo-lithium"
-googleAnalytics = "UA-121894527-1"
+googleAnalytics = "UA-125451055-1" 
 disqusShortname = ""
 ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
 

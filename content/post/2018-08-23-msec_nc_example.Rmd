@@ -1,0 +1,291 @@
+---
+title: "Extracting MSEC data from a netcdf file"
+author: "Robin Elahi"
+date: 2018-08-23T21:13:14-05:00
+categories: ["R"]
+tags: ["R Markdown", "netcdf", "msec"]
+---
+
+```{r setup, include = FALSE, cache = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      #fig.path = 'figs/', cache.path = 'cache/graphics-',
+                      fig.align = 'center', fig.width = 7, fig.height = 7,
+                      fig.show = 'hold', cache = TRUE, par = TRUE)
+
+knitr::opts_knit$set(root.dir = "../../")
+
+# for Rmd
+library(knitr)
+```
+
+### Introduction
+
+I am working on a project that is trying to understand why some coral reefs are faring better than others. Towards this end, I am collating a number of predictors hypothesized to influence the condition of coral reefs. In this post, I am going to demonstrate the steps necessary to take advantage of this awesome dataset by [Yeager et al. 2017](https://esajournals.onlinelibrary.wiley.com/doi/abs/10.1002/ecy.1884). 
+
+There are two ways to go about extracting the geospatial data:
+
+  1. You can download the supplementary material as a zipped file from the data paper (see above link)
+  2. You can query this nice [shiny app](https://shiny.sesync.org/apps/msec/) with your set of lat-longs 
+  
+The 2nd option was super easy, and I was able to immediately plug in my set of ~4000 lat-longs and extract one of the datasets I needed. But here's the rub - I was only able to do this for three of the predictors: net primary productivity, wave energy, and distance to market.  Due to the constraints on the app, I wasn't able to pull the reef area and human population data. 
+
+So, I had to figure out how to wrangle the netcdf files - here I'll share what I came up with.
+
+```{r r_packages}
+# Tidyverse
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(readr)
+
+# Spatial
+library(ncdf4)
+library(fuzzyjoin)
+```
+
+Here's a function to get a basemap:
+
+```{r get_base_map}
+## Function to get a base map
+get_base_map_general <- function(x, latitude = "SI_LATI", longitude = "SI_LONG", 
+                                 range_extension = 0.25, my_color = "black", 
+                                 my_fill = "gray", high_res = TRUE){
+  
+  library(mapdata)
+  library(dplyr)
+  library(ggplot2)
+  
+  SI_LONG = x[, longitude]
+  SI_LATI = x[, latitude]
+  
+  # Get latitude and longitude range limits
+  rangeLat <- range(SI_LATI) + c(-range_extension, range_extension)
+  rangeLong <- range(SI_LONG) + c(-range_extension, range_extension)
+  
+  ## Use fortify
+  if(high_res == TRUE){
+    coast_map <- fortify(map("worldHires", fill = TRUE, 
+                             xlim = rangeLong, ylim = rangeLat, 
+                             plot = FALSE)) 
+  }
+
+  if(high_res == FALSE){
+    coast_map <- fortify(map("world", fill = TRUE, 
+                             xlim = rangeLong, ylim = rangeLat, 
+                             plot = FALSE)) 
+  }
+  
+  map1 <- ggplot(coast_map, aes(long, lat)) + 
+    geom_map(map = coast_map, aes(map_id = region), 
+             color = my_color, fill = my_fill, size = 0.25) + 
+    coord_fixed() + 
+    labs(x = "Longitude", y = "Latitude") + 
+    scale_x_continuous(limits = rangeLong) + 
+    scale_y_continuous(limits = rangeLat) + 
+    theme(panel.grid = element_blank())
+  
+  # Return base map
+  map1 
+}
+```
+
+It will be necessary to convert between two different longitude formats:
+
+```{r longitude_conversion_functions}
+## Functions to convert longitude between -180 & 180 and 0 & 360
+
+convert_180_to_360 <- function(x){
+  # Add 360 to negative values
+  x[x < 0] <- x[x < 0] + 360
+  return(x)
+}
+
+convert_360_to_180 <- function(x){
+  # Subtract 360 to values >= 180
+  x[x >= 180] <- x[x >= 180] - 360
+  return(x)
+}
+
+```
+
+### Get NOAA lat longs
+
+1. Get range of lat & longs in df
+
+For this example, I am using Puerto Rican station locations sampled by NOAA in 2014. https://data.nodc.noaa.gov/cgi-bin/iso?id=gov.noaa.nodc:0151729
+
+```{r load_noaa_ll_data}
+# Load list of lat-longs
+noaa_ll <- read_csv("data/NCRMP_PR2014_StationLocations.csv") %>% 
+  rename(SI_LATI = latitude, SI_LONG = longitude) %>% 
+  mutate(ll_id = seq(1:length(SI_LATI))) %>% 
+  select(SI_LATI:ll_id)
+
+noaa_ll
+
+# Convert noaa longitude to nc longitude
+noaa_ll <- noaa_ll %>% 
+  mutate(SI_LONG_360 = convert_180_to_360(SI_LONG))
+
+# Choose subset i (a relic from my original script, sorry)
+noaa_ll_i <- noaa_ll %>% 
+  filter(SI_LONG > -67.5)
+
+# Get lat and long range (I will use this to subset the netcdf data next)
+lat_range <- range(noaa_ll_i$SI_LATI)
+long_range <- range(noaa_ll_i$SI_LONG_360)
+```
+
+2. Extract the relevant netcdf data
+
+Download the Yeager [DataS1 zip archive](https://esajournals.onlinelibrary.wiley.com/doi/abs/10.1002/ecy.1884). 
+
+I will use distance to market for this example - so that I can double check my work against the shiny app. 
+
+```{r extract_nc_data}
+
+# Enter your path to the data
+path_to_data <- "/Volumes/sdxc1/"
+
+# Retrieve a list of nc files in my data folder:
+flist <- list.files(path = path_to_data, pattern = "^.*\\.(nc|NC|Nc|Nc)$")
+flist
+
+# The following code is from:
+# https://stackoverflow.com/questions/21280104/how-to-take-a-subset-from-a-netcdf-file-using-latitude-longitude-boundaries-in-r
+
+ncFile <- nc_open(paste0(path_to_data, flist[1]))
+
+# Retrieve the latitude and longitude values.
+attributes(ncFile$dim)$names
+
+nc_lon <- ncvar_get(ncFile, attributes(ncFile$dim)$names[1])
+nc_lat <- ncvar_get(ncFile, attributes(ncFile$dim)$names[2])
+
+nc_lon_length <- length(nc_lon)
+nc_lat_length <- length(nc_lat)
+
+nc_lon_bin_size <- 360 / nc_lon_length
+nc_lat_bin_size <- 180 / nc_lat_length
+
+# Now extract the relevant lat-longs
+# Add a buffer p x the bin size
+# p = multiplier
+p = 2
+LonIdx <- which(ncFile$dim$lon$vals > long_range[1] - p*nc_lon_bin_size & ncFile$dim$lon$vals < long_range[2] + p*nc_lon_bin_size)
+
+LatIdx <- which(ncFile$dim$lat$vals > lat_range[1] - p*nc_lat_bin_size & ncFile$dim$lat$vals < lat_range[2] + p*nc_lat_bin_size)
+
+MyVariable <- ncvar_get(ncFile, attributes(ncFile$var)$names[1])[LonIdx, LatIdx]
+
+lon <- ncFile$dim$lon$val[LonIdx] 
+lat <- ncFile$dim$lat$val[LatIdx]
+nc_close(ncFile)
+
+nc_df <- cbind(rep(lat, each = length(lon)), rep(lon, length(lat)), 
+                c(MyVariable)) %>% tbl_df() %>% 
+  rename(SI_LATI = V1, SI_LONG_360 = V2, z = V3) 
+
+# Change to -180 to 180
+nc_df$SI_LONG <- convert_360_to_180(nc_df$SI_LONG_360)
+
+```
+
+3. Map the results
+```{r map_nc_df, fig.width = 12, fig.height = 6}
+
+theme_set(theme_bw(base_size = 16) + 
+            theme(strip.background = element_blank()))
+
+# Note that z = NA results in gray cell
+summary(nc_df$z)
+
+nc_df %>% 
+  ggplot(aes(SI_LONG, SI_LATI, fill = z)) + 
+  geom_raster() + 
+  scale_fill_gradient() + 
+  coord_equal()
+
+# Remove NAs (for safety, in case the join occurs on a cell without satellite data)
+nc_df_sub <- nc_df %>% filter(!is.na(z))
+summary(nc_df_sub$z)
+
+nc_df_sub %>% 
+  ggplot(aes(SI_LONG, SI_LATI, fill = z)) + 
+  geom_raster() + 
+  scale_fill_gradient() + 
+  coord_equal()
+```
+
+4. Left fuzzy geo-join
+
+```{r fuzzy_join}
+noaa_ll_i2 <- noaa_ll_i %>% 
+  select(-SI_LONG_360) %>% # have to remove this otherwise fuzzy join fails (b/c tries to join on three cols)
+  geo_left_join(., nc_df_sub, unit = 'km', 
+                distance_col = "dist_km", max_dist = 4)
+
+# Note that there are now multiple rows (dist_km) for each ll_id
+# Group by ll_id, arrange by dist_km (descending), then slice the first row
+# Should retrieve the original nrows
+
+noaa_ll_i3 <- noaa_ll_i2 %>% 
+  group_by(ll_id) %>% 
+  arrange(ll_id, dist_km) %>% 
+  slice(1) %>% 
+  ungroup()
+
+```
+
+5. Map Puerto Rico
+
+The red x's are the station locations, and the black points represent the center of each grid cell from the MSEC dataset. The black segment links each station location with the corresponding MSEC grid cell (i.e., the associated value). 
+
+``` {r map_pr, fig.width = 12, fig.height = 6}
+
+theme_set(theme_bw(base_size = 16) + 
+            theme(strip.background = element_blank()))
+
+## Get basemap
+basemap <- get_base_map_general(noaa_ll_i3, latitude = "SI_LATI.y", 
+                                longitude = "SI_LONG.y", 
+                                range_extension = 0.1, high_res = T)
+
+basemap + 
+  geom_raster(data = nc_df_sub, aes(SI_LONG, SI_LATI, fill = z), 
+              inherit.aes = FALSE, alpha = 0.75) +
+  geom_point(data = noaa_ll_i, aes(SI_LONG, SI_LATI), # Site ll's
+             size = 1, alpha = 1, inherit.aes = FALSE, color = "red", pch = 4) + 
+  geom_point(data = noaa_ll_i3, aes(SI_LONG.y, SI_LATI.y), # NC ll's
+             size = 0.5, alpha = 1, inherit.aes = FALSE, color = "darkblue", pch = 0) + 
+  scale_fill_gradient(low = "lightblue", high = "darkblue") + 
+  theme(legend.position = "bottom") +
+  geom_segment(data = noaa_ll_i3, aes(x = SI_LONG.y, y = SI_LATI.y, 
+                  xend = SI_LONG.x, yend = SI_LATI.x), color = "black", 
+               inherit.aes = FALSE) 
+```
+
+6. Sanity check
+
+First, I need to download the distance to market data from the shiny app. You'll have to rename the columns in the csv file to 'long' and 'lat'. 
+
+```{r load_msec_data}
+
+theme_set(theme_bw(base_size = 16) + 
+            theme(strip.background = element_blank()))
+
+msec <- read_csv("data/msec_out.csv") %>% 
+  mutate(ll_id = seq(1:length(long)))
+msec
+
+msec_noaa <- inner_join(msec, noaa_ll_i3, by = "ll_id")
+
+msec_noaa %>% 
+  ggplot(aes(z, dist_market)) + 
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") + 
+  geom_point(color = "red", alpha = 0.75) + 
+  labs(x = "netcdf", y = "shiny", title = "Distance to market (km)")
+
+```
+
+
