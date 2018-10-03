@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>/2018/10/03/data-science-teaching-resources/</loc>
+    <lastmod>2018-10-03T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/2018/09/07/extracting-marine-socio-environmental-covariates-msec-from-a-netcdf-file/</loc>
     <lastmod>2018-09-07T12:13:14-05:00</lastmod>
   </url>
@@ -28,8 +33,14 @@
   </url>
   
   <url>
+    <loc>/categories/data-science/</loc>
+    <lastmod>2018-10-03T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>/</loc>
-    <lastmod>2018-09-07T12:13:14-05:00</lastmod>
+    <lastmod>2018-10-03T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -47,13 +58,13 @@
   
   <url>
     <loc>/post/</loc>
-    <lastmod>2018-09-07T12:13:14-05:00</lastmod>
+    <lastmod>2018-10-03T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>/categories/r/</loc>
-    <lastmod>2018-09-07T12:13:14-05:00</lastmod>
+    <lastmod>2018-10-03T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -66,6 +77,12 @@
   <url>
     <loc>/tags/</loc>
     <lastmod>2018-09-07T12:13:14-05:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/categories/teaching/</loc>
+    <lastmod>2018-10-03T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   

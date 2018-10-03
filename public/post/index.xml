@@ -6,10 +6,19 @@
     <description>Recent content in Posts on Marine Ecology &amp; Data Science</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 07 Sep 2018 12:13:14 -0500</lastBuildDate>
+    <lastBuildDate>Wed, 03 Oct 2018 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Data science teaching resources</title>
+      <link>/2018/10/03/data-science-teaching-resources/</link>
+      <pubDate>Wed, 03 Oct 2018 00:00:00 +0000</pubDate>
+      
+      <guid>/2018/10/03/data-science-teaching-resources/</guid>
+      <description>In my new role as lecturer at Hopkins Marine Station, I am in the process of brainstorming my upcoming courses. One of these is &amp;lsquo;Environmental Data Science&amp;rsquo;, and as I was writing out the course schedule, I began to appreciate the dilemma of fitting in the appropriate mix of modern data carpentry skills with more traditional statistics requirements within the constraints of a 10 week schedule. One could make the case that these should be two separate courses, but that&amp;rsquo;s another issue.</description>
+    </item>
     
     <item>
       <title>Extracting marine socio-environmental covariates (MSEC) from a netcdf file</title>
